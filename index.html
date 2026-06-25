@@ -472,7 +472,7 @@
 
 <script>
 // ===================== CONFIG =====================
-let UNSPLASH_KEY = 'pd1UJkJAcMpoQfXSFCjH_xnumyGruL9kGbJje0mk_DE';
+let UNSPLASH_KEY = localStorage.getItem('unsplashKey') || '';
 
 // 60+ fallback lot images - no API key needed
 const FALLBACK_LOTS = [
@@ -579,20 +579,88 @@ const LOT_QUERIES = [
   'unpaved lot gravel',
 ];
 
+// ===================== SUPABASE =====================
+const SUPABASE_URL = 'https://bqhnfyumbyykygqmldzh.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxaG5meXVtYnl5a3lncW1sZHpoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzNTIxMTAsImV4cCI6MjA5NzkyODExMH0.L2TNUNHwYaHq4veB0pk1sl3-CYh1oaYLTT-Jtu63vJo';
+
+async function dbInsertRating(entry) {
+  try {
+    await fetch(`${SUPABASE_URL}/rest/v1/ratings`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify({
+        lot_id: entry.id,
+        lot_url: entry.url,
+        lot_location: entry.location,
+        score: entry.score
+      })
+    });
+  } catch(e) {
+    console.warn('DB insert failed, saving locally only', e);
+  }
+}
+
+async function dbFetchLeaderboard() {
+  try {
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/ratings?select=lot_id,lot_url,lot_location,score`,
+      {
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': `Bearer ${SUPABASE_KEY}`
+        }
+      }
+    );
+    if (!res.ok) return null;
+    return await res.json();
+  } catch(e) {
+    return null;
+  }
+}
+
+async function dbFetchTotalCount() {
+  try {
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/ratings?select=id`,
+      {
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': `Bearer ${SUPABASE_KEY}`,
+          'Prefer': 'count=exact',
+          'Range': '0-0'
+        }
+      }
+    );
+    const range = res.headers.get('content-range');
+    if (range) {
+      const total = range.split('/')[1];
+      if (total && total !== '*') return parseInt(total);
+    }
+    return null;
+  } catch(e) { return null; }
+}
+
 // ===================== STATE =====================
-let ratings = JSON.parse(localStorage.getItem('lotRatings') || '[]');
 let currentLot = null;
 let lotCounter = parseInt(localStorage.getItem('lotCounter') || '0');
 let fallbackIndex = parseInt(localStorage.getItem('fallbackIndex') || '0');
 let seenIds = new Set(JSON.parse(localStorage.getItem('seenIds') || '[]'));
-let totalRated = parseInt(localStorage.getItem('totalRated') || '0');
 
-// Visitor counter (fake but persistent)
+// Visitor counter (fake but persistent per device)
 let visitors = parseInt(localStorage.getItem('visitors') || String(Math.floor(Math.random() * 8000 + 2000)));
 visitors++;
 localStorage.setItem('visitors', visitors);
 document.getElementById('visitorNum').textContent = String(visitors).padStart(7, '0');
-document.getElementById('totalRated').textContent = totalRated;
+
+// Fetch real total count from Supabase
+dbFetchTotalCount().then(count => {
+  if (count !== null) document.getElementById('totalRated').textContent = count.toLocaleString();
+});
 
 // ===================== IMAGE LOADING =====================
 // Tracks which (query, page) combos we've pulled from so we don't repeat
@@ -714,21 +782,24 @@ const VERDICTS = {
   10: "🏆 PERFECT LOT!!! 10/10!!! LEGENDARY!!!"
 };
 
-function rateLot(score) {
+async function rateLot(score) {
   if (!currentLot) return;
+  disableButtons(true);
+
   const entry = {
     id: currentLot.id,
-    url: currentLot.url.split('?')[0], // clean URL for leaderboard display
+    url: currentLot.url.split('?')[0],
     location: currentLot.location,
-    score: score,
-    timestamp: Date.now()
+    score: score
   };
-  ratings.push(entry);
-  localStorage.setItem('lotRatings', JSON.stringify(ratings));
 
-  totalRated++;
-  localStorage.setItem('totalRated', totalRated);
-  document.getElementById('totalRated').textContent = totalRated;
+  // Save to Supabase (shared across all devices!)
+  await dbInsertRating(entry);
+
+  // Update total count from DB
+  dbFetchTotalCount().then(count => {
+    if (count !== null) document.getElementById('totalRated').textContent = count.toLocaleString();
+  });
 
   const flash = document.getElementById('resultFlash');
   flash.textContent = `YOU GAVE IT A ${score}/10! ${VERDICTS[score]}`;
@@ -744,29 +815,36 @@ function nextLot() {
 }
 
 // ===================== LEADERBOARD =====================
-function buildLeaderboard() {
+async function buildLeaderboard() {
   const content = document.getElementById('leaderboardContent');
-  if (ratings.length === 0) {
+  content.innerHTML = '<div class="lb-empty" style="color:#00ff00;">⏳ LOADING LEADERBOARD FROM THE DATABASE...</div>';
+
+  const rows = await dbFetchLeaderboard();
+
+  if (!rows || rows.length === 0) {
     content.innerHTML = '<div class="lb-empty">No lots rated yet!<br>Go rate some lots!!!</div>';
     return;
   }
 
-  // Group ratings by lot ID and average them
+  // Group by lot_id and average scores
   const lotMap = {};
-  ratings.forEach(r => {
-    if (!lotMap[r.id]) {
-      lotMap[r.id] = { url: r.url, location: r.location, scores: [], id: r.id };
+  rows.forEach(r => {
+    if (!lotMap[r.lot_id]) {
+      lotMap[r.lot_id] = { url: r.lot_url, location: r.lot_location || 'Somewhere, USA', scores: [] };
     }
-    lotMap[r.id].scores.push(r.score);
+    lotMap[r.lot_id].scores.push(r.score);
   });
 
-  const lots = Object.values(lotMap).map(l => ({
-    ...l,
+  const lots = Object.entries(lotMap).map(([id, l]) => ({
+    id,
+    url: l.url,
+    location: l.location,
     avg: l.scores.reduce((a,b) => a+b, 0) / l.scores.length,
     votes: l.scores.length
   }));
 
-  lots.sort((a, b) => b.avg - a.avg);
+  // Sort by avg score desc, then by vote count for tiebreaking
+  lots.sort((a, b) => b.avg - a.avg || b.votes - a.votes);
   const top = lots.slice(0, 20);
 
   const grid = document.createElement('div');
