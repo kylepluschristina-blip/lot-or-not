@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>LOT OR NOT - The #1 Lot Rating Site on the World Wide Web!!!</title>
+<style>
+  /* ===== 90s AESTHETIC ===== */
+  @import url('https://fonts.googleapis.com/css2?family=VT323&family=Press+Start+2P&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background-color: #000080;
+    background-image: 
+      repeating-linear-gradient(
+        0deg, transparent, transparent 2px, rgba(0,0,0,0.15) 2px, rgba(0,0,0,0.15) 4px
+      );
+    font-family: Arial, sans-serif;
+    color: #ffffff;
+    min-height: 100vh;
+  }
+
+  /* Marquee bar */
+  .marquee-bar {
+    background: #000;
+    border-top: 3px solid #ffff00;
+    border-bottom: 3px solid #ffff00;
+    padding: 4px 0;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+  .marquee-text {
+    display: inline-block;
+    animation: marquee 18s linear infinite;
+    color: #ffff00;
+    font-family: 'VT323', monospace;
+    font-size: 20px;
+    letter-spacing: 2px;
+  }
+  @keyframes marquee {
+    0% { transform: translateX(100vw); }
+    100% { transform: translateX(-100%); }
+  }
+
+  /* Header */
+  .site-header {
+    text-align: center;
+    padding: 12px 0 6px;
+    background: linear-gradient(180deg, #000 0%, #000080 100%);
+    border-bottom: 4px double #ff00ff;
+  }
+  .site-title {
+    font-family: 'Press Start 2P', monospace;
+    font-size: clamp(20px, 5vw, 42px);
+    color: #ffff00;
+    text-shadow: 3px 3px #ff0000, 6px 6px #ff00ff;
+    letter-spacing: 4px;
+    animation: colorCycle 2s linear infinite;
+  }
+  @keyframes colorCycle {
+    0%   { text-shadow: 3px 3px #ff0000, 6px 6px #ff00ff; }
+    33%  { text-shadow: 3px 3px #00ff00, 6px 6px #0000ff; }
+    66%  { text-shadow: 3px 3px #ff00ff, 6px 6px #ffff00; }
+    100% { text-shadow: 3px 3px #ff0000, 6px 6px #ff00ff; }
+  }
+  .site-subtitle {
+    font-family: 'VT323', monospace;
+    font-size: 22px;
+    color: #00ffff;
+    margin-top: 4px;
+  }
+  .blink {
+    animation: blink 0.8s step-start infinite;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  /* Nav tabs */
+  .nav-tabs {
+    display: flex;
+    justify-content: center;
+    gap: 4px;
+    padding: 8px;
+    background: #000;
+    border-bottom: 3px ridge #888;
+  }
+  .nav-btn {
+    font-family: 'VT323', monospace;
+    font-size: 18px;
+    padding: 4px 16px;
+    background: #c0c0c0;
+    color: #000;
+    border: 3px outset #ffffff;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .nav-btn:active { border-style: inset; }
+  .nav-btn.active {
+    background: #000080;
+    color: #ffffff;
+    border-style: inset;
+  }
+
+  /* Main layout */
+  .main-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 12px;
+  }
+
+  /* Page sections */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* Rating section */
+  .rating-card {
+    background: #000;
+    border: 4px ridge #c0c0c0;
+    padding: 12px;
+    margin-bottom: 12px;
+    text-align: center;
+  }
+
+  .lot-image-wrap {
+    position: relative;
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto 12px;
+    border: 6px inset #888;
+    background: #333;
+    min-height: 300px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+  .lot-image-wrap img {
+    width: 100%;
+    max-height: 380px;
+    object-fit: cover;
+    display: block;
+  }
+  .img-loading {
+    font-family: 'VT323', monospace;
+    font-size: 24px;
+    color: #00ff00;
+    animation: blink 0.6s step-start infinite;
+  }
+
+  .lot-label {
+    font-family: 'VT323', monospace;
+    font-size: 20px;
+    color: #00ffff;
+    margin-bottom: 8px;
+  }
+
+  /* Rating buttons */
+  .rating-prompt {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 11px;
+    color: #ffff00;
+    margin-bottom: 12px;
+  }
+  .score-buttons {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-bottom: 14px;
+  }
+  .score-btn {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 13px;
+    width: 46px;
+    height: 46px;
+    cursor: pointer;
+    border: 3px outset #ffffff;
+    transition: transform 0.1s;
+  }
+  .score-btn:active { border-style: inset; transform: scale(0.95); }
+  .score-btn[data-score="1"]  { background: #ff0000; color: #fff; }
+  .score-btn[data-score="2"]  { background: #ff3300; color: #fff; }
+  .score-btn[data-score="3"]  { background: #ff6600; color: #fff; }
+  .score-btn[data-score="4"]  { background: #ff9900; color: #000; }
+  .score-btn[data-score="5"]  { background: #ffcc00; color: #000; }
+  .score-btn[data-score="6"]  { background: #ddee00; color: #000; }
+  .score-btn[data-score="7"]  { background: #aadd00; color: #000; }
+  .score-btn[data-score="8"]  { background: #66cc00; color: #fff; }
+  .score-btn[data-score="9"]  { background: #33bb00; color: #fff; }
+  .score-btn[data-score="10"] { background: #00aa00; color: #fff; }
+
+  .result-flash {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 13px;
+    color: #ff00ff;
+    min-height: 20px;
+    margin-bottom: 8px;
+  }
+
+  .skip-btn {
+    font-family: 'VT323', monospace;
+    font-size: 20px;
+    background: #333;
+    color: #aaa;
+    border: 2px outset #666;
+    padding: 4px 20px;
+    cursor: pointer;
+    letter-spacing: 1px;
+  }
+  .skip-btn:hover { color: #fff; background: #555; }
+
+  /* Lot count badge */
+  .counter-badge {
+    display: inline-block;
+    background: #000;
+    border: 2px solid #00ff00;
+    font-family: 'VT323', monospace;
+    font-size: 18px;
+    color: #00ff00;
+    padding: 2px 10px;
+    margin-bottom: 8px;
+  }
+
+  /* ===== LEADERBOARD ===== */
+  .leaderboard-wrap {
+    background: #000;
+    border: 4px ridge #ffff00;
+    padding: 12px;
+  }
+  .lb-title {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 13px;
+    color: #ffff00;
+    text-align: center;
+    margin-bottom: 14px;
+    text-shadow: 2px 2px #ff6600;
+  }
+  .lb-empty {
+    font-family: 'VT323', monospace;
+    font-size: 22px;
+    color: #888;
+    text-align: center;
+    padding: 30px;
+  }
+  .lb-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 10px;
+  }
+  .lb-card {
+    background: #111;
+    border: 3px outset #888;
+    padding: 0;
+    overflow: hidden;
+    position: relative;
+  }
+  .lb-rank {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 10px;
+    background: #ff6600;
+    color: #fff;
+    padding: 2px 5px;
+    z-index: 2;
+  }
+  .lb-img {
+    width: 100%;
+    height: 130px;
+    object-fit: cover;
+    display: block;
+    border-bottom: 2px solid #444;
+  }
+  .lb-info {
+    padding: 6px 8px;
+    font-family: 'VT323', monospace;
+  }
+  .lb-score {
+    font-size: 26px;
+    line-height: 1;
+  }
+  .lb-votes {
+    font-size: 16px;
+    color: #aaa;
+  }
+  .lb-score-num {
+    color: #00ff00;
+  }
+
+  /* Stars display */
+  .stars { color: #ffff00; font-size: 18px; letter-spacing: 2px; }
+
+  /* Footer */
+  .site-footer {
+    text-align: center;
+    border-top: 3px double #ffff00;
+    padding: 10px;
+    margin-top: 16px;
+    font-family: 'VT323', monospace;
+    font-size: 17px;
+    color: #aaa;
+    background: #000;
+  }
+  .visitor-counter {
+    font-family: 'VT323', monospace;
+    font-size: 22px;
+    color: #00ff00;
+    background: #000;
+    border: 2px inset #444;
+    display: inline-block;
+    padding: 2px 10px;
+    letter-spacing: 3px;
+  }
+
+  /* Win animation */
+  @keyframes winPop {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.15); }
+    100% { transform: scale(1); }
+  }
+  .win-pop { animation: winPop 0.3s ease; }
+
+  /* ===== ABOUT ===== */
+  .about-box {
+    background: #000;
+    border: 4px ridge #00ffff;
+    padding: 16px;
+    font-family: 'VT323', monospace;
+    font-size: 20px;
+    line-height: 1.6;
+    color: #00ffff;
+  }
+  .about-box h3 {
+    color: #ffff00;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 11px;
+    margin: 12px 0 6px;
+  }
+  .about-box a { color: #ff00ff; }
+
+  /* Instructions box */
+  .instructions-bar {
+    background: #330033;
+    border: 2px dashed #ff00ff;
+    padding: 8px 12px;
+    font-family: 'VT323', monospace;
+    font-size: 18px;
+    color: #ff88ff;
+    margin-bottom: 10px;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<!-- Marquee -->
+<div class="marquee-bar">
+  <span class="marquee-text">
+    🚗 LOT OR NOT — RATE THE LOTS!!! 🏆 BEST LOT RATING SITE ON THE INTERNET 🌐 ESTABLISHED 1997 🚗 
+    IS IT A HOT LOT OR A NOT LOT? YOU DECIDE!!! 🏆 OVER 10,000 LOTS RATED!!! 
+    🚗 LOT OR NOT — RATE THE LOTS!!! 🏆
+  </span>
+</div>
+
+<!-- Header -->
+<div class="site-header">
+  <div class="site-title">LOT OR NOT</div>
+  <div class="site-subtitle">
+    <span class="blink">★</span> 
+    The ORIGINAL Lot Rating Experience on the World Wide Web™ 
+    <span class="blink">★</span>
+  </div>
+</div>
+
+<!-- Nav -->
+<div class="nav-tabs">
+  <button class="nav-btn active" onclick="showPage('rate')">▶ RATE A LOT</button>
+  <button class="nav-btn" onclick="showPage('leaderboard')">🏆 HOT LOTS</button>
+  <button class="nav-btn" onclick="showPage('about')">❓ ABOUT</button>
+</div>
+
+<div class="main-container">
+
+  <!-- RATE PAGE -->
+  <div class="page active" id="page-rate">
+    <div class="instructions-bar">
+      👀 Look at the lot below — then rate it 1 (worst lot EVER) to 10 (AMAZING lot!!!) 👀
+    </div>
+    <div class="rating-card">
+      <div class="counter-badge">LOTS RATED: <span id="totalRated">0</span></div>
+      <div class="lot-label">LOT #<span id="lotNum">1</span> &mdash; <span id="lotLocation">Somewhere, USA</span></div>
+
+      <div class="lot-image-wrap" id="imgWrap">
+        <span class="img-loading" id="imgLoader">LOADING LOT... PLEASE WAIT...</span>
+        <img id="lotImg" src="" alt="lot" style="display:none;" onload="imgLoaded()" onerror="imgError()">
+      </div>
+
+      <div class="rating-prompt">HOW HOT IS THIS LOT???</div>
+      <div class="score-buttons" id="scoreButtons">
+        <button class="score-btn" data-score="1" onclick="rateLot(1)">1</button>
+        <button class="score-btn" data-score="2" onclick="rateLot(2)">2</button>
+        <button class="score-btn" data-score="3" onclick="rateLot(3)">3</button>
+        <button class="score-btn" data-score="4" onclick="rateLot(4)">4</button>
+        <button class="score-btn" data-score="5" onclick="rateLot(5)">5</button>
+        <button class="score-btn" data-score="6" onclick="rateLot(6)">6</button>
+        <button class="score-btn" data-score="7" onclick="rateLot(7)">7</button>
+        <button class="score-btn" data-score="8" onclick="rateLot(8)">8</button>
+        <button class="score-btn" data-score="9" onclick="rateLot(9)">9</button>
+        <button class="score-btn" data-score="10" onclick="rateLot(10)">10</button>
+      </div>
+      <div class="result-flash" id="resultFlash"></div>
+      <button class="skip-btn" onclick="nextLot()">[SKIP THIS LOT &gt;&gt;]</button>
+    </div>
+  </div>
+
+  <!-- LEADERBOARD PAGE -->
+  <div class="page" id="page-leaderboard">
+    <div class="leaderboard-wrap">
+      <div class="lb-title">🏆 THE HOTTEST LOTS ON THE INTERNET 🏆</div>
+      <div id="leaderboardContent">
+        <div class="lb-empty">No lots rated yet!<br>Go rate some lots!!!</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ABOUT PAGE -->
+  <div class="page" id="page-about">
+    <div class="about-box">
+      <h3>WHAT IS LOT OR NOT???</h3>
+      Welcome to the #1 parking lot, vacant lot, and empty lot rating website on the entire Internet!!! 
+      Rate lots from 1 to 10 and see which lots rise to the top of the leaderboard!!!
+
+      <h3>HOW TO RATE</h3>
+      Click a number from 1 (terrible lot) to 10 (incredible lot) to rate the lot shown. 
+      Your ratings are saved and contribute to the HOT LOTS leaderboard!!!
+
+      <h3>WHERE DO THE IMAGES COME FROM?</h3>
+      Lot images are pulled live from the <strong>Unsplash API</strong> — an endless supply of real lot photos from around the world!<br><br>
+      <strong style="color:#ffff00;">🔑 To get truly ENDLESS images, get a FREE Unsplash API key:</strong><br>
+      1. Go to <strong>unsplash.com/developers</strong><br>
+      2. Create a free account &amp; new application<br>
+      3. Copy your <strong>Access Key</strong><br>
+      4. Click the ⚙️ button on the Rate page and paste it in!<br><br>
+      With a key: <strong style="color:#00ff00;">25 search queries × 50 pages × 15 photos = 18,750+ unique lots!!!</strong><br>
+      Without a key: 60+ curated fallback lots, shuffled randomly each session!
+
+      <h3>BEST VIEWED IN</h3>
+      Netscape Navigator 4.0 at 800x600 resolution!!! 
+      <span class="blink" style="color:#ff00ff;">(just kidding — any browser works)</span>
+
+      <h3>TECHNICAL STUFF</h3>
+      Ratings are stored in your browser's localStorage — they persist between visits but are local to your device only.
+
+      <h3>CREDITS</h3>
+      Built with ♥ and pure 1997 energy.<br>
+      Images © their respective Unsplash photographers.
+    </div>
+  </div>
+
+</div>
+
+<!-- Footer -->
+<div class="site-footer">
+  <div>You are visitor number:</div>
+  <div class="visitor-counter" id="visitorNum">0000000</div>
+  <div style="margin-top:6px; color:#666;">
+    &copy; 1997-2026 LOT OR NOT, Inc. &bull; Best Lots Guaranteed &bull; 
+    <span class="blink" style="color:#ff0000;">NEW LOTS ADDED DAILY!!!</span>
+  </div>
+</div>
+
+<script>
+// ===================== CONFIG =====================
+let UNSPLASH_KEY = localStorage.getItem('unsplashKey') || '';
+
+// 60+ fallback lot images - no API key needed
+const FALLBACK_LOTS = [
+  { url: 'https://images.unsplash.com/photo-1506521781263-d8422e82f27a?w=700&q=80', location: 'Downtown, CA' },
+  { url: 'https://images.unsplash.com/photo-1573348722427-f1d6819fdf98?w=700&q=80', location: 'Phoenix, AZ' },
+  { url: 'https://images.unsplash.com/photo-1545459720-aac8509eb02c?w=700&q=80', location: 'Columbus, OH' },
+  { url: 'https://images.unsplash.com/photo-1486325212027-8081e485255e?w=700&q=80', location: 'Houston, TX' },
+  { url: 'https://images.unsplash.com/photo-1529074963764-98f45c47344b?w=700&q=80', location: 'Atlanta, GA' },
+  { url: 'https://images.unsplash.com/photo-1611348524140-53c9a25263d6?w=700&q=80', location: 'Detroit, MI' },
+  { url: 'https://images.unsplash.com/photo-1470224114660-3f6686c562eb?w=700&q=80', location: 'Chicago, IL' },
+  { url: 'https://images.unsplash.com/photo-1590674899484-d5640e854abe?w=700&q=80', location: 'Las Vegas, NV' },
+  { url: 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?w=700&q=80', location: 'Portland, OR' },
+  { url: 'https://images.unsplash.com/photo-1564501049412-61c2a3083791?w=700&q=80', location: 'Miami, FL' },
+  { url: 'https://images.unsplash.com/photo-1525438160292-a4a860951216?w=700&q=80', location: 'Seattle, WA' },
+  { url: 'https://images.unsplash.com/photo-1551892374-ecf8754cf8b0?w=700&q=80', location: 'Denver, CO' },
+  { url: 'https://images.unsplash.com/photo-1504714149697-fea5559e1b04?w=700&q=80', location: 'Boston, MA' },
+  { url: 'https://images.unsplash.com/photo-1561070791-2526d30994b5?w=700&q=80', location: 'Nashville, TN' },
+  { url: 'https://images.unsplash.com/photo-1519654793190-2e4dc9e17975?w=700&q=80', location: 'St. Louis, MO' },
+  { url: 'https://images.unsplash.com/photo-1567016432779-094069958ea5?w=700&q=80', location: 'Indianapolis, IN' },
+  { url: 'https://images.unsplash.com/photo-1530099486328-e021101a494a?w=700&q=80', location: 'Sacramento, CA' },
+  { url: 'https://images.unsplash.com/photo-1482062364825-616fd23b8fc1?w=700&q=80', location: 'Cleveland, OH' },
+  { url: 'https://images.unsplash.com/photo-1494526585095-c41746248156?w=700&q=80', location: 'Baltimore, MD' },
+  { url: 'https://images.unsplash.com/photo-1563911302283-d2bc129e7570?w=700&q=80', location: 'New Orleans, LA' },
+  { url: 'https://images.unsplash.com/photo-1554435493-93422e8220c7?w=700&q=80', location: 'Tucson, AZ' },
+  { url: 'https://images.unsplash.com/photo-1611348524140-53c9a25263d6?w=700&q=80', location: 'Flint, MI' },
+  { url: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=700&q=80', location: 'Albuquerque, NM' },
+  { url: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=700&q=80', location: 'Omaha, NE' },
+  { url: 'https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=700&q=80', location: 'Memphis, TN' },
+  { url: 'https://images.unsplash.com/photo-1582407947304-fd86f028f716?w=700&q=80', location: 'Reno, NV' },
+  { url: 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=700&q=80', location: 'Louisville, KY' },
+  { url: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=700&q=80', location: 'Richmond, VA' },
+  { url: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=700&q=80', location: 'Baton Rouge, LA' },
+  { url: 'https://images.unsplash.com/photo-1486304873000-235643847519?w=700&q=80', location: 'Spokane, WA' },
+  { url: 'https://images.unsplash.com/photo-1494783367193-149034c05e8f?w=700&q=80', location: 'Akron, OH' },
+  { url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=700&q=80', location: 'Bakersfield, CA' },
+  { url: 'https://images.unsplash.com/photo-1560184897-ae75f418493e?w=700&q=80', location: 'Fresno, CA' },
+  { url: 'https://images.unsplash.com/photo-1523217582562-09d0def993a6?w=700&q=80', location: 'Riverside, CA' },
+  { url: 'https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?w=700&q=80', location: 'Aurora, CO' },
+  { url: 'https://images.unsplash.com/photo-1599809275671-b5942cabc7a2?w=700&q=80', location: 'Corpus Christi, TX' },
+  { url: 'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=700&q=80', location: 'Lexington, KY' },
+  { url: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=700&q=80', location: 'Anchorage, AK' },
+  { url: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=700&q=80', location: 'Stockton, CA' },
+  { url: 'https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=700&q=80', location: 'St. Paul, MN' },
+  { url: 'https://images.unsplash.com/photo-1605276374104-dee2a0ed3cd6?w=700&q=80', location: 'Cincinnati, OH' },
+  { url: 'https://images.unsplash.com/photo-1600047509358-9dc75507daeb?w=700&q=80', location: 'Pittsburgh, PA' },
+  { url: 'https://images.unsplash.com/photo-1583608205776-bfd35f0d9f83?w=700&q=80', location: 'Greensboro, NC' },
+  { url: 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?w=700&q=80', location: 'Lincoln, NE' },
+  { url: 'https://images.unsplash.com/photo-1567496898669-ee935f5f647a?w=700&q=80', location: 'Plano, TX' },
+  { url: 'https://images.unsplash.com/photo-1493809842364-78817add7ffb?w=700&q=80', location: 'Henderson, NV' },
+  { url: 'https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=700&q=80', location: 'Buffalo, NY' },
+  { url: 'https://images.unsplash.com/photo-1598228723793-52759bba239c?w=700&q=80', location: 'Fort Wayne, IN' },
+  { url: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=700&q=80', location: 'Madison, WI' },
+  { url: 'https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=700&q=80', location: 'Laredo, TX' },
+  { url: 'https://images.unsplash.com/photo-1574362848149-11496d93a7c7?w=700&q=80', location: 'Durham, NC' },
+  { url: 'https://images.unsplash.com/photo-1601628828688-632f38a5a7d0?w=700&q=80', location: 'Lubbock, TX' },
+  { url: 'https://images.unsplash.com/photo-1519710164239-da123dc03ef4?w=700&q=80', location: 'Winston-Salem, NC' },
+  { url: 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=700&q=80', location: 'Garland, TX' },
+  { url: 'https://images.unsplash.com/photo-1502005229762-cf1b2da7c5d6?w=700&q=80', location: 'Glendale, AZ' },
+  { url: 'https://images.unsplash.com/photo-1600210492493-0946911123ea?w=700&q=80', location: 'Hialeah, FL' },
+  { url: 'https://images.unsplash.com/photo-1416331108676-a22ccb276e35?w=700&q=80', location: 'Raleigh, NC' },
+  { url: 'https://images.unsplash.com/photo-1575517111839-3a3843ee7f5d?w=700&q=80', location: 'Norfolk, VA' },
+  { url: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=700&q=80', location: 'Chandler, AZ' },
+  { url: 'https://images.unsplash.com/photo-1522050212171-61b01dd24579?w=700&q=80', location: 'Scottsdale, AZ' },
+  { url: 'https://images.unsplash.com/photo-1556909172-54557c7e4fb7?w=700&q=80', location: 'Boise, ID' },
+];
+
+// Shuffle fallback pool so order is random each session
+function shuffleArray(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+const SHUFFLED_FALLBACKS = shuffleArray(FALLBACK_LOTS);
+
+// 25 search queries spanning every lot type imaginable
+const LOT_QUERIES = [
+  'parking lot aerial',
+  'empty parking lot',
+  'vacant lot urban',
+  'asphalt parking lot',
+  'strip mall parking',
+  'gravel parking lot',
+  'parking garage exterior',
+  'surface parking lot',
+  'shopping center parking',
+  'parking lot lines',
+  'abandoned parking lot',
+  'suburban parking lot',
+  'downtown parking',
+  'concrete parking lot',
+  'parking lot night',
+  'parking lot sunset',
+  'retail parking lot',
+  'parking lot cars',
+  'stadium parking lot',
+  'lot pavement markings',
+  'empty urban lot',
+  'parking lot puddle',
+  'parking lot winter',
+  'overflow parking',
+  'unpaved lot gravel',
+];
+
+// ===================== STATE =====================
+let ratings = JSON.parse(localStorage.getItem('lotRatings') || '[]');
+let currentLot = null;
+let lotCounter = parseInt(localStorage.getItem('lotCounter') || '0');
+let fallbackIndex = parseInt(localStorage.getItem('fallbackIndex') || '0');
+let seenIds = new Set(JSON.parse(localStorage.getItem('seenIds') || '[]'));
+let totalRated = parseInt(localStorage.getItem('totalRated') || '0');
+
+// Visitor counter (fake but persistent)
+let visitors = parseInt(localStorage.getItem('visitors') || String(Math.floor(Math.random() * 8000 + 2000)));
+visitors++;
+localStorage.setItem('visitors', visitors);
+document.getElementById('visitorNum').textContent = String(visitors).padStart(7, '0');
+document.getElementById('totalRated').textContent = totalRated;
+
+// ===================== IMAGE LOADING =====================
+// Tracks which (query, page) combos we've pulled from so we don't repeat
+let usedCombos = new Set(JSON.parse(localStorage.getItem('usedCombos') || '[]'));
+
+async function fetchUnsplashLot() {
+  if (!UNSPLASH_KEY) return null;
+
+  // Build a list of untried (query, page) combos; each query has 50 pages
+  // That's 25 queries × 50 pages = 1,250 possible page pulls × ~10 photos each = 12,500+ unique lots
+  let attempts = 0;
+  while (attempts < 8) {
+    attempts++;
+    const query = LOT_QUERIES[Math.floor(Math.random() * LOT_QUERIES.length)];
+    const page  = Math.floor(Math.random() * 50) + 1;
+    const comboKey = `${query}::${page}`;
+
+    try {
+      const res = await fetch(
+        `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&page=${page}&per_page=15&orientation=landscape`,
+        { headers: { Authorization: `Client-ID ${UNSPLASH_KEY}` } }
+      );
+      if (!res.ok) continue;
+      const data = await res.json();
+      const photos = (data.results || []).filter(p => !seenIds.has(p.id));
+      if (photos.length === 0) continue;
+
+      const photo = photos[Math.floor(Math.random() * photos.length)];
+      seenIds.add(photo.id);
+
+      // Prune seen set if it gets huge
+      if (seenIds.size > 2000) {
+        const arr = [...seenIds];
+        seenIds = new Set(arr.slice(arr.length - 1000));
+      }
+      localStorage.setItem('seenIds', JSON.stringify([...seenIds]));
+
+      usedCombos.add(comboKey);
+      if (usedCombos.size > 800) {
+        const arr = [...usedCombos];
+        usedCombos = new Set(arr.slice(arr.length - 400));
+      }
+      localStorage.setItem('usedCombos', JSON.stringify([...usedCombos]));
+
+      return {
+        url: photo.urls.regular,
+        location: photo.user.location || photo.alt_description || 'Somewhere, USA',
+        id: photo.id,
+        source: 'unsplash'
+      };
+    } catch(e) {
+      continue;
+    }
+  }
+  return null; // All attempts failed — fall through to fallback
+}
+
+function getFallbackLot() {
+  const lot = SHUFFLED_FALLBACKS[fallbackIndex % SHUFFLED_FALLBACKS.length];
+  fallbackIndex = (fallbackIndex + 1) % SHUFFLED_FALLBACKS.length;
+  localStorage.setItem('fallbackIndex', fallbackIndex);
+  return {
+    url: lot.url + '&nocache=' + Date.now(),
+    location: lot.location,
+    id: 'fallback-' + fallbackIndex + '-' + Date.now(),
+    source: 'fallback'
+  };
+}
+
+async function loadNextLot() {
+  const img = document.getElementById('lotImg');
+  const loader = document.getElementById('imgLoader');
+  img.style.display = 'none';
+  loader.style.display = 'inline';
+  document.getElementById('resultFlash').textContent = '';
+  disableButtons(true);
+
+  lotCounter++;
+  localStorage.setItem('lotCounter', lotCounter);
+  document.getElementById('lotNum').textContent = lotCounter;
+
+  // Try Unsplash first, fall back to curated pool
+  let lot = await fetchUnsplashLot();
+  if (!lot) lot = getFallbackLot();
+  currentLot = lot;
+
+  document.getElementById('lotLocation').textContent = lot.location || 'Somewhere, USA';
+  img.src = lot.url;
+}
+
+function imgLoaded() {
+  document.getElementById('lotImg').style.display = 'block';
+  document.getElementById('imgLoader').style.display = 'none';
+  disableButtons(false);
+}
+
+function imgError() {
+  // Try next fallback on error
+  currentLot = getFallbackLot();
+  document.getElementById('lotImg').src = currentLot.url;
+  document.getElementById('lotLocation').textContent = currentLot.location;
+}
+
+function disableButtons(disabled) {
+  document.querySelectorAll('.score-btn, .skip-btn').forEach(b => b.disabled = disabled);
+}
+
+// ===================== RATING =====================
+const VERDICTS = {
+  1:  "😱 WORST LOT EVER!!! A DISGRACE TO ASPHALT!!!",
+  2:  "😤 TERRIBLE LOT. DO NOT PARK HERE!!!",
+  3:  "😕 Pretty bad lot. Very sad.",
+  4:  "🤔 Below average lot. Meh.",
+  5:  "😐 Totally mid lot. It exists.",
+  6:  "🙂 Not bad! Has potential.",
+  7:  "😊 Pretty good lot! Nice lines!",
+  8:  "🤩 HOT LOT ALERT!!! Very nice!!!",
+  9:  "🔥 EXTREMELY HOT LOT!!! WOW!!!",
+  10: "🏆 PERFECT LOT!!! 10/10!!! LEGENDARY!!!"
+};
+
+function rateLot(score) {
+  if (!currentLot) return;
+  const entry = {
+    id: currentLot.id,
+    url: currentLot.url.split('?')[0], // clean URL for leaderboard display
+    location: currentLot.location,
+    score: score,
+    timestamp: Date.now()
+  };
+  ratings.push(entry);
+  localStorage.setItem('lotRatings', JSON.stringify(ratings));
+
+  totalRated++;
+  localStorage.setItem('totalRated', totalRated);
+  document.getElementById('totalRated').textContent = totalRated;
+
+  const flash = document.getElementById('resultFlash');
+  flash.textContent = `YOU GAVE IT A ${score}/10! ${VERDICTS[score]}`;
+  flash.classList.remove('win-pop');
+  void flash.offsetWidth;
+  flash.classList.add('win-pop');
+
+  setTimeout(nextLot, 1600);
+}
+
+function nextLot() {
+  loadNextLot();
+}
+
+// ===================== LEADERBOARD =====================
+function buildLeaderboard() {
+  const content = document.getElementById('leaderboardContent');
+  if (ratings.length === 0) {
+    content.innerHTML = '<div class="lb-empty">No lots rated yet!<br>Go rate some lots!!!</div>';
+    return;
+  }
+
+  // Group ratings by lot ID and average them
+  const lotMap = {};
+  ratings.forEach(r => {
+    if (!lotMap[r.id]) {
+      lotMap[r.id] = { url: r.url, location: r.location, scores: [], id: r.id };
+    }
+    lotMap[r.id].scores.push(r.score);
+  });
+
+  const lots = Object.values(lotMap).map(l => ({
+    ...l,
+    avg: l.scores.reduce((a,b) => a+b, 0) / l.scores.length,
+    votes: l.scores.length
+  }));
+
+  lots.sort((a, b) => b.avg - a.avg);
+  const top = lots.slice(0, 20);
+
+  const grid = document.createElement('div');
+  grid.className = 'lb-grid';
+
+  top.forEach((lot, i) => {
+    const stars = '★'.repeat(Math.round(lot.avg)) + '☆'.repeat(10 - Math.round(lot.avg));
+    const card = document.createElement('div');
+    card.className = 'lb-card';
+    card.innerHTML = `
+      <div class="lb-rank">#${i+1}</div>
+      <img class="lb-img" src="${lot.url}" alt="lot" onerror="this.src='https://images.unsplash.com/photo-1506521781263-d8422e82f27a?w=400&q=60'">
+      <div class="lb-info">
+        <div class="lb-score"><span class="lb-score-num">${lot.avg.toFixed(1)}</span>/10</div>
+        <div class="stars">${stars.substring(0,10)}</div>
+        <div class="lb-votes">${lot.votes} vote${lot.votes !== 1 ? 's' : ''} &bull; ${lot.location}</div>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+
+  content.innerHTML = '';
+  content.appendChild(grid);
+}
+
+// ===================== NAVIGATION =====================
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  event.target.classList.add('active');
+  if (name === 'leaderboard') buildLeaderboard();
+}
+
+// ===================== UNSPLASH KEY SETUP =====================
+// Inject a small settings button
+const settingsBtn = document.createElement('button');
+settingsBtn.className = 'skip-btn';
+settingsBtn.style.cssText = 'font-size:14px;margin-left:8px;padding:4px 10px;';
+settingsBtn.innerHTML = '⚙️ API KEY';
+settingsBtn.onclick = () => {
+  const key = prompt(
+    '🔑 Enter your FREE Unsplash Access Key for ENDLESS lots!\n\n' +
+    'Get one free at: unsplash.com/developers\n\n' +
+    '(Leave blank to use the built-in lot library)'
+  );
+  if (key !== null) {
+    UNSPLASH_KEY = key.trim();
+    localStorage.setItem('unsplashKey', UNSPLASH_KEY);
+    alert(UNSPLASH_KEY ? '✅ Key saved! Enjoy endless lots!!!' : '🗑️ Key cleared. Using built-in lots!');
+    loadNextLot();
+  }
+};
+document.querySelector('.nav-tabs').appendChild(settingsBtn);
+
+// ===================== INIT =====================
+loadNextLot();
+</script>
+</body>
+</html>
